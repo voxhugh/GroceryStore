@@ -4,3 +4,4 @@
 
 - `AutoSwitchTheme.ps1`: auto switch system theme at sunrise sunset.
 
+- `TempProxy.sh`: set up a temporary proxy.
