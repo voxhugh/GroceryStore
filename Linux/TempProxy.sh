@@ -1,28 +1,40 @@
 #!/bin/bash
-# 配置
-IP=192.168.1.100
+
+# 代理IP 
+read -p "IP : " IP
 PORT=7890
 
 # 备份
-OLD_HTTP=$http_proxy
-OLD_HTTPS=$https_proxy
-OLD_ALL=$all_proxy
+old_proxies=(
+    "$http_proxy"
+    "$https_proxy"
+    "$all_proxy"
+)
 
 # 代理
-export http_proxy=http://$IP:$PORT
-export https_proxy=http://$IP:$PORT
-export all_proxy=socks5://$IP:$PORT
+export http_proxy="http://$IP:$PORT"
+export https_proxy="http://$IP:$PORT"
+export all_proxy="socks5://$IP:$PORT"
 
-# 测试
-test() {
-  curl -s --head --connect-timeout 5 "$1" >/dev/null && echo "OK: $1" || echo "Fail: $1"
+test_proxy() {
+    curl -s --head --connect-timeout 5 "$1" >/dev/null && return 0 || return 1
 }
 
-test https://www.google.com
-test https://www.github.com
+sites=(
+    "https://www.google.com"
+    "https://www.youtube.com"
+)
 
-# 回滚
-export http_proxy=$OLD_HTTP
-export https_proxy=$OLD_HTTPS
-export all_proxy=$OLD_ALL
+# 测试
+for site in "${sites[@]}"; do
+    if ! test_proxy "$site"; then
+        echo "Fail: $site，回滚配置..."
+        export http_proxy="${old_proxies[0]}"
+        export https_proxy="${old_proxies[1]}"
+        export all_proxy="${old_proxies[2]}"
+        exit 1
+    fi
+    echo "OK: $site"
+done
 
+echo "代理已生效"    
